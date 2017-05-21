@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+remote_name="$1"
+remote_url="$2"
+
+x=${remote_url#*://}
+remote_vm=${x%%/*}
+remote_path=/${x#*/}
+#echo "remote_vm=${remote_vm}, remote_path=${remote_path}" >&2
+
+reply() {
+	#echo "< $*" >&2
+	echo "$*"
+}
+
+while read line ; do
+	#echo "> $line" >&2
+	case $line in
+		capabilities)
+			reply connect
+			reply ""
+			;;
+		connect\ git-upload-pack)
+			#TODO The 'cat' process will keep the pipeline alive if the qrexec call fails.
+			#     I don't know how to fix that...
+			( echo "$remote_path" ; cat ) | qrexec-client-vm "$remote_vm" GitRemoteUpload
+			#echo "x: $?"
+			;;
+		connect\ git-receive-pack)
+			( echo "$remote_path" ; cat ) | qrexec-client-vm "$remote_vm" GitRemoteReceive
+			;;
+		*)
+			echo "ERROR: command not implemented ($line)" >&2
+			exit 1
+			;;
+	esac
+done
+
