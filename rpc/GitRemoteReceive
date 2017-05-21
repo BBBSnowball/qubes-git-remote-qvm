@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+read dir
+if [ -z "$dir" ] ; then
+  echo "directory missing" >&2
+  exit 1
+fi
+cd "$dir"
+echo ""
+git-receive-pack "$dir"
+
